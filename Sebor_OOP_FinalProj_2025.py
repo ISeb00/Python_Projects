@@ -62,8 +62,8 @@
 #  (3) Add mol_weight, which returns the total molecular weight of the protein
 #      sequence assigned to the protein object. 
 
-
 import re
+import doctest
 
 standard_code = {
      "UUU": "F", "UUC": "F", "UUA": "L", "UUG": "L", "UCU": "S",
@@ -100,12 +100,27 @@ class Seq:
         self.kmers=[]
 
     def __str__(self):
+        """This function overloads the print function to return self.sequence
+        >>> x=Seq("ATATAG","my_gene","H.sapiens")
+        >>> print(x)
+        ATATAG
+        """
         return self.sequence
 
     def print_record(self):
+        """This function returns self.sequence, self.gene, and self.species as a string
+        >>> x=Seq("ATATAG","my_gene","H.sapiens")   
+        >>> x.print_record()
+        'H.sapiens my_gene: ATATAG'
+        """
         return self.species + " " + self.gene + ": " + self.sequence
 
     def make_kmers(self, k=3):
+        """This function creates overlapping kmers of the sequence
+        >>> x=Seq("ATATAG","my_gene","H.sapiens")   
+        >>> x.make_kmers()
+        ['ATA', 'TAT', 'ATA', 'TAG']
+        """
         for b in range(0,len(self.sequence)):
             kmer=self.sequence[b:b+k]
             if len(kmer)<k: break
@@ -113,6 +128,11 @@ class Seq:
         return self.kmers 
 
     def fasta(self):
+        """This function returns the Seq data in fasta format
+        >>> x=Seq("ATATAG","my_gene","H.sapiens")   
+        >>> x.fasta()
+        '>H.sapiens my_gene\\nATATAG'
+        """
         return ">" + self.species + " " + self.gene + "\n" + self.sequence
     
 class DNA(Seq):
@@ -123,13 +143,28 @@ class DNA(Seq):
         self.sequence=re.sub('[^ATGCU]','N',self.sequence)
  
     def analysis(self):
+        """This function returns GC count
+        >>> x=DNA("ATATAG","my_gene","H.sapiens", "000")
+        >>> x.analysis()
+        1
+        """
         gc=len(re.findall('G',self.sequence) + re.findall('C',self.sequence))
         return gc
 
     def print_info(self):
+        """This function returns geneid, species, gene, and sequence
+        >>> x=DNA("ATATAG","my_gene","H.sapiens", "000")   
+        >>> x.print_info()
+        000 H.sapiens my_gene: ATATAG
+        """
         print(self.geneid + " " + self.species + " " + self.gene + ": " + self.sequence)
 
     def reverse_complement(self):
+        """This function returns the reverse complement sequence
+        >>> x=DNA("ATATAG","my_gene","H.sapiens", "000")   
+        >>> x.reverse_complement()
+        'CTATAT'
+        """
         rseq=self.sequence[::-1]
         rcomp=""
         for b in rseq:
@@ -146,6 +181,11 @@ class DNA(Seq):
         return rcomp
 
     def six_frames(self):
+        """This function returns ORFs for the sequence and its reverse complement
+        >>> x=DNA("ATATAG","my_gene","H.sapiens", "000")   
+        >>> x.six_frames()
+        ['ATATAG', 'TATAG', 'ATAG', 'CTATAT', 'TATAT', 'ATAT']
+        """
         fframes=[]
         rframes=[]
         rcomp=self.reverse_complement()
@@ -166,6 +206,11 @@ class RNA(DNA):
         self.codons=[]
         
     def make_codons(self):
+        """This function returns codons of the sequence
+        >>> x=RNA("ATATAG","my_gene","H.sapiens", "000")   
+        >>> x.make_codons()
+        ['AUA', 'UAG']
+        """
         for b in range(0,len(self.sequence),3):
             codon=self.sequence[b:b+3]
             if len(codon)<3: break
@@ -173,6 +218,13 @@ class RNA(DNA):
         return self.codons
  
     def translate(self):
+        """This function translates RNA codons from make_codons to amino acids
+        >>> x=RNA("ATATAG","my_gene","H.sapiens", "000")
+        >>> x.make_codons()
+        ['AUA', 'UAG']
+        >>> x.translate()
+        'I*'
+        """
         prot=""
         for c in self.codons:
             try:
@@ -189,6 +241,11 @@ class Protein(Seq):
         self.sequence=re.sub('[^A-Z]','X',self.sequence)
 
     def total_hydro(self):
+        """This function calculates kyte-doolittle protein hydrophobicity
+        >>> x=Protein("INGRID","my_gene","H.sapiens", "000")   
+        >>> x.total_hydro()
+        -2.9
+        """
         tot_hp=0
         for a in self.sequence:
             try:
@@ -199,6 +256,11 @@ class Protein(Seq):
         return tot_hp
 
     def mol_weight(self):
+        """This function calculates protein molecular weight
+        >>> x=Protein("INGRID","my_gene","H.sapiens", "000")   
+        >>> x.mol_weight()
+        776.8299999999999
+        """
         tot_mw=0
         for a in self.sequence:
             try:
@@ -207,3 +269,9 @@ class Protein(Seq):
                 mw=0
             tot_mw+=mw
         return tot_mw
+
+
+
+if __name__=="__main__":
+
+    doctest.testmod(verbose=True)
